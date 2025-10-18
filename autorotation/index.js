@@ -9,6 +9,13 @@ const PROPS_IFACE = 'org.freedesktop.DBus.Properties';
 
 async function main(){
 
+    let monitor_exec = exec("monitor-sensor"); // activate iio-sensor-proxy
+    setTimeout(()=>{
+        monitor_exec.kill();
+    }, 10000);
+
+
+
     let obj = await systemBus.getProxyObject(
         'net.hadess.SensorProxy',
         '/net/hadess/SensorProxy'
@@ -24,15 +31,16 @@ async function main(){
     	return ret.value;
     }
 
-    const hasAccel = await props.Get(IFACE, 'HasAccelerometer');
-
     let orientation_value = null;
 
     async function detectOrientationChange(){
+        const hasAccel = await props.Get(IFACE, 'HasAccelerometer');
     	if(!hasAccel.value) return; // Do nothing if no accelerometer installed
 
     	let old_value = orientation_value;
     	orientation_value = await getOrientation();
+
+        console.log("orientation_value", orientation_value);
 
     	if(old_value == orientation_value) return; // no change
 
