@@ -25,10 +25,13 @@ class NMEAEmitterWorker extends events.EventEmitter {
             this.emit("data", data);
         });
 
-        this.#gps.on("error", ()=>{
+        const on_close = ()=>{
             this.#gps.destroy();
             this.emit("close");
-        });
+        };
+
+        this.#gps.on("error", on_close);
+        this.#gps.on("close", on_close);
     }
 
 }
@@ -54,13 +57,16 @@ class NMEAEmitter extends events.EventEmitter {
                 .toString()
                 .split("\n")
                 .map(e=>e.trim())
-                .filter(e=>e.startsWith('$'))
+                .filter(e=>e.startsWith('$G'))
             ;
             this.emit("data", lines.join('\n').toString());
         });
 
         this.#worker.on("close", ()=>{
-            this.#createWorker();
+            setTimeout(
+                ()=>{this.#createWorker();},
+                1000
+            );
         });
     }
 

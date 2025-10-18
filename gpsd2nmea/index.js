@@ -9,7 +9,11 @@ const app = express();
 
 app.use(express.json());
 
+let last_nmea_reception = 0;
+
 nmea_emitter.on("data", (data)=>{
+	last_nmea_reception = new Date().getTime();
+
 	let lines = data.split("\n");
 	for(let l of lines){
 		gps.update(l);
@@ -38,7 +42,16 @@ app.listen(12947);
 
 const inject_gps_start = require("./inject_gps_start");
 async function inject_gps_again(){
-	if(await inject_gps_start()) return;
+	const now = new Date().getTime();
+
+	if(now - last_nmea_reception > 10000){
+		try{
+			await inject_gps_start();
+		} catch(e){
+			console.log("inject_gps_again error:", e);
+		}
+	}
+
 	setTimeout(inject_gps_again, 10000);
 }
 setTimeout(inject_gps_again, 10000);
