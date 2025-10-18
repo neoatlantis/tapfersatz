@@ -33,3 +33,12 @@ app.all("/", (req, res)=>{
 });
 
 app.listen(12947);
+
+
+
+const inject_gps_start = require("./inject_gps_start");
+async function inject_gps_again(){
+	if(await inject_gps_start()) return;
+	setTimeout(inject_gps_again, 10000);
+}
+setTimeout(inject_gps_again, 10000);
